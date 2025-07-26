@@ -1,0 +1,61 @@
+name: Update Prompts
+permissions:
+    id-token: write # This is required for requesting the JWT
+    contents: read  # This is necessary for actions/checkout
+on:
+    push:
+        branches:
+        - main
+        paths:
+        - cf-template.yaml
+
+    pull_request_target:
+        branches:
+        - main
+        types: [labeled]
+        paths:
+        - cf-template.yaml
+    
+    pull_request:
+        branches:
+        - main
+        paths:
+        - cf-template.yaml
+jobs:
+    update_prompts:
+      name: Update Prompts
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: "arn:aws:iam::$ACCOUNT_ID:role/github-actions"
+            aws-region: "us-east-1"
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: "3.10"
+
+        - name: Install dependencies
+          run: |
+            pip install awscli
+        - name: deploy-prompts
+          run: |
+            echo "Current branch name is ${{ github.ref_name }}"
+            echo "Current branch name is ${{ github.head_ref }}"
+            if [[ ${{ github.ref_name }} == "main" ]]; then
+              echo "Current branch is main"
+              aws cloudformation deploy --template-file cf-template.yaml \
+                --stack-name prod-agent-parameters \
+                --parameter-overrides Environment=prod \
+                --no-fail-on-empty-changeset
+            else
+              echo "Current branch is not main"
+              aws cloudformation deploy --template-file cf-template.yaml \
+                --stack-name dev-agent-parameters \
+                --parameter-overrides Environment=dev \
+                --no-fail-on-empty-changeset
+            fi
