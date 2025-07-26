@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: CloudFormation template to manage prompts
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+    - dev
+    - prod
+Resources:
+  Agent1Prompt:
+    Type: AWS::SSM::Parameter
+    Name: !Sub "/myapp/${Environment}/agent1"
+    Type: String
+    Tier: Intelligent-Tiering
+    Description: Prompt for Agent 1
+
+  Agent2Prompt:
+    Type: AWS::SSM::Parameter
+    Name: !Sub "/myapp/${Environment}/agent2"
+    Type: String
+    Tier: Intelligent-Tiering
+    Description: Prompt for Agent 2
